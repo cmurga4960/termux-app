@@ -57,6 +57,7 @@ import com.termux.view.TerminalView;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -169,6 +170,7 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
             TerminalSession session = getCurrentTermSession();
             if (session != null && session.getEmulator() != null) {
                 session.getEmulator().mColors.reset();
+                runMyCommand();
             }
             updateBackgroundColor();
 
@@ -549,7 +551,41 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
         // The current terminal session may have changed while being away, force
         // a refresh of the displayed terminal:
         mTerminalView.onScreenUpdated();
+
     }
+
+    public void runMyCommand(){
+        String org_cmd = "touch z\n";
+        ArrayList<byte[]>buffers = new ArrayList<byte[]>();
+        for(int i=0; i<org_cmd.length(); i++){
+            char letter = org_cmd.charAt(i);
+            byte data[];
+            if (letter == '\n'){
+                data = new byte[1];
+                data[0] = '\n';
+                buffers.add(data);
+            }
+            else{
+                data = new byte[5];
+                data[0] = (byte)letter;
+                buffers.add(data);
+            }
+        }
+        TerminalSession sesh = getCurrentTermSession();
+        if(sesh == null){
+            Log.i("sesh49","sesh not ready");
+        }
+        else{
+            Log.i("sesh49","sesh is ready!!!");
+            for(byte[] data:buffers){
+                getCurrentTermSession().write(data,0,1);
+            }
+        }
+        //Intent main = new Intent(this, MyMain.class);
+        //startActivity(main);
+        //finish();
+    }
+
 
     @Override
     protected void onStop() {

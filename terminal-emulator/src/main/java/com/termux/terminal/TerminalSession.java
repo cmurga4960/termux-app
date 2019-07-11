@@ -1,6 +1,7 @@
 package com.termux.terminal;
 
 import android.annotation.SuppressLint;
+import android.os.Debug;
 import android.os.Handler;
 import android.os.Message;
 import android.system.ErrnoException;
@@ -14,7 +15,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -29,6 +32,8 @@ import java.util.UUID;
  * NOTE: The terminal session may outlive the EmulatorView, so be careful with callbacks!
  */
 public final class TerminalSession extends TerminalOutput {
+
+    public static FileDescriptor myTerminalFileDescriptorWrapped;
 
     /** Callback to be invoked when a {@link TerminalSession} changes. */
     public interface SessionChangedCallback {
@@ -112,6 +117,7 @@ public final class TerminalSession extends TerminalOutput {
             if (msg.what == MSG_NEW_INPUT && isRunning()) {
                 int bytesRead = mProcessToTerminalIOQueue.read(mReceiveBuffer, false);
                 if (bytesRead > 0) {
+                    //TODO for input to screen? weird... meaning the emulator processes it first...
                     mEmulator.append(mReceiveBuffer, bytesRead);
                     notifyScreenUpdate();
                 }
@@ -149,6 +155,7 @@ public final class TerminalSession extends TerminalOutput {
         this.mCwd = cwd;
         this.mArgs = args;
         this.mEnv = env;
+
     }
 
     /** Inform the attached pty of the new size and reflow or initialize the emulator. */
@@ -172,14 +179,17 @@ public final class TerminalSession extends TerminalOutput {
      * @param columns The number of columns in the terminal window.
      * @param rows    The number of rows in the terminal window.
      */
-    public void initializeEmulator(int columns, int rows) {
+    private void initializeEmulator(int columns, int rows) {
         mEmulator = new TerminalEmulator(this, columns, rows, /* transcript= */2000);
 
         int[] processId = new int[1];
+        //Log.i("4960","Running command:"+mShellPath+"__"+mCwd+"--"+mArgs);
+        //TODO here is what I want x)
         mTerminalFileDescriptor = JNI.createSubprocess(mShellPath, mCwd, mArgs, mEnv, processId, rows, columns);
         mShellPid = processId[0];
 
         final FileDescriptor terminalFileDescriptorWrapped = wrapFileDescriptor(mTerminalFileDescriptor);
+        myTerminalFileDescriptorWrapped = terminalFileDescriptorWrapped;
 
         new Thread("TermSessionInputReader[pid=" + mShellPid + "]") {
             @Override
@@ -189,6 +199,11 @@ public final class TerminalSession extends TerminalOutput {
                     while (true) {
                         int read = termIn.read(buffer);
                         if (read == -1) return;
+                        /*String hex = TerminalSession.bytesToHex(buffer);
+                        String ascii = TerminalSession.hexToAscii(hex);
+                        Log.i("6049","HEX:"+hex);
+                        Log.i("6049","ASCII:"+ascii);*/
+                        //prints results
                         if (!mProcessToTerminalIOQueue.write(buffer, 0, read)) return;
                         mMainThreadHandler.sendEmptyMessage(MSG_NEW_INPUT);
                     }
@@ -206,6 +221,11 @@ public final class TerminalSession extends TerminalOutput {
                     while (true) {
                         int bytesToWrite = mTerminalToProcessIOQueue.read(buffer, true);
                         if (bytesToWrite == -1) return;
+                        /*String hex = TerminalSession.bytesToHex(buffer);
+                        String ascii = TerminalSession.hexToAscii(hex);
+                        Log.i("4960","HEX:"+hex);
+                        Log.i("4960","ASCII:"+ascii);*/
+                        //print what im typing
                         termOut.write(buffer, 0, bytesToWrite);
                     }
                 } catch (IOException e) {
@@ -224,9 +244,40 @@ public final class TerminalSession extends TerminalOutput {
 
     }
 
+    public static String bytesToHex(byte[] bytes){
+        //}, int start, int end) {
+        //if(start - end == 0)
+        //    return "";
+        //bytes = Arrays.copyOfRange(bytes,start+4,end+4);
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for(byte b: bytes)
+            sb.append(String.format("%02x", b));
+        return sb.toString().substring(0,sb.length()-2);
+    }
+
+    public static String hexToAscii(String hex){
+        String result = "";
+        for(int i=0; i<hex.length(); i+=2)
+        {
+            String str = hex.substring(i, i + 2);
+            str = ""+((char) Integer.parseInt(str, 16));
+            if(Charset.forName("US-ASCII").newEncoder().canEncode(str))
+                result+=str;
+            else
+                result+=" 0x"+hex.substring(i, i + 2)+" ";
+        }
+        return result;
+    }
+
     /** Write data to the shell process. */
     @Override
     public void write(byte[] data, int offset, int count) {
+        //TODO call here?
+        String hex = TerminalSession.bytesToHex(data);
+        String ascii = TerminalSession.hexToAscii(hex);
+        Log.i("write4960","HEX:"+hex);
+        Log.i("write4960","ASCII:"+ascii);
+        Log.i("write4960","data:"+data.length+"_"+offset+"_"+count);
         if (mShellPid > 0) mTerminalToProcessIOQueue.write(data, offset, count);
     }
 

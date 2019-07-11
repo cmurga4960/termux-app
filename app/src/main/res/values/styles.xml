@@ -4,9 +4,9 @@
     <!-- See https://developer.android.com/training/material/theme.html for how to customize the Material theme. -->
     <!-- NOTE: Cannot use "Light." since it hides the terminal scrollbar on the default black background. -->
     <style name="Theme.Termux" parent="@android:style/Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">#000000</item>
-        <item name="android:colorPrimary">#FF000000</item>
-        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:statusBarColor">#333333</item>
+        <item name="android:colorPrimary">#99333333</item>
+        <item name="android:windowBackground">@android:color/holo_blue_light</item>
 
         <!-- Seen in buttons on left drawer: -->
         <item name="android:colorAccent">#212121</item>

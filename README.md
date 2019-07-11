@@ -2,6 +2,10 @@
 [![Join the chat at https://gitter.im/termux/termux](https://badges.gitter.im/termux/termux.svg)](https://gitter.im/termux/termux)
 
 
+Termux CORE
+==========
+This project allows for developers to utalize Termux functionality while developing a new application.
+
 Termux app
 ==========
 

@@ -6,31 +6,46 @@ Termux CORE
 ==========
 This project allows for developers to utalize Termux functionality while developing a new application.
 
-Termux app
-==========
+Steps:
 
-[Termux](https://termux.com) is an Android terminal app and Linux environment.
+Clone https://github.com/cmurga4960/termux-app-core
+Delete .git in termux-app-core
+Move repo into desired location (e.g. new repo).
+Open termux-app-core in android studio
+Right click app/java/com.termux and select refactor - rename package
+Choose a name with same length as termux
+Click do refactor
+(optional) Edit androidmanifest shareduserid value ???? maybe not...
+(optional) Edit res/values/strings application_name value
+(optional) change build.gradle values and sync
+Clean and rebuild project
+Switch file view to Project (instead of Android).  This will avoid confusion.
+Edit the file TermuxService.java in app/src/main/java/com.ohoney/app/
+Replace “com.termux” with your new name
+Edit the file TermuxInstaller.java in the same dir
+Add the following code to the method determineZipUrl()
 
-* [Termux on Google Play Store](https://play.google.com/store/apps/details?id=com.termux)
-* [Termux on F-Droid](https://f-droid.org/repository/browse/?fdid=com.termux)
-* [Termux Google+ community](http://termux.com/community/)
-* [Termux Wiki](https://wiki.termux.com/wiki/)
-* [Termux Twitter](http://twitter.com/termux/)
+        if (!TermuxService.FILES_PATH .contains("com.termux"))
+        {
+            url = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                ? "http://mydomain.com/bootstrap/bootstrap1?arch=" + archName
+                : "http://mydomain.com/bootstrap/bootstrap2?arch=" + archName;
+        }
+        Log.i(“url49",url);
+Edit terminal-emulator/cpp/termux.c
+Replace “com_termux” with “com_”+your name
+Rebuild bootstrap
+Download:
+    https://termux.org/bootstrap-aarch64.zip
+    https://termux.org/bootstrap-arm.zip
+    https://termux.org/bootstrap-i686.zip
+    https://termux.org/bootstrap-x86_64.zip
+    https://termux.net/bootstrap/bootstrap-aarch64.zip
+    https://termux.net/bootstrap/bootstrap-arm.zip
+    https://termux.net/bootstrap/bootstrap-i686.zip
+    https://termux.net/bootstrap/bootstrap-x86_64.zip
+Unzip and replace “com.termux” with your name in every file (including binaries)
+Zip folders and upload to a webserver the Android device can reach
+Build and pray
+If you get “Unable to install” for bootstrap - verify the zip can be reached 
 
-Note that this repository is for the app itself (the user interface and the terminal emulation). For the packages installable inside the app, see [termux/termux-packages](https://github.com/termux/termux-packages)
-
-Terminal resources
-==================
-* [XTerm control sequences](http://invisible-island.net/xterm/ctlseqs/ctlseqs.html)
-* [vt100.net](http://vt100.net/)
-* [Terminal codes (ANSI and terminfo equivalents)](http://wiki.bash-hackers.org/scripting/terminalcodes)
-
-Terminal emulators
-==================
-* VTE (libvte): Terminal emulator widget for GTK+, mainly used in gnome-terminal. [Source](https://github.com/GNOME/vte), [Open Issues](https://bugzilla.gnome.org/buglist.cgi?quicksearch=product%3A%22vte%22+), and [All (including closed) issues](https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&chfield=resolution&chfieldfrom=-2000d&chfieldvalue=FIXED&product=vte&resolution=FIXED).
-* iTerm 2: OS X terminal application. [Source](https://github.com/gnachman/iTerm2), [Issues](https://gitlab.com/gnachman/iterm2/issues) and [Documentation](http://www.iterm2.com/documentation.html) (which includes [iTerm2 proprietary escape codes](http://www.iterm2.com/documentation-escape-codes.html)).
-* Konsole: KDE terminal application. [Source](https://projects.kde.org/projects/kde/applications/konsole/repository), in particular [tests](https://projects.kde.org/projects/kde/applications/konsole/repository/revisions/master/show/tests), [Bugs](https://bugs.kde.org/buglist.cgi?bug_severity=critical&bug_severity=grave&bug_severity=major&bug_severity=crash&bug_severity=normal&bug_severity=minor&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&product=konsole) and [Wishes](https://bugs.kde.org/buglist.cgi?bug_severity=wishlist&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&product=konsole).
-* hterm: JavaScript terminal implementation from Chromium. [Source](https://github.com/chromium/hterm), including [tests](https://github.com/chromium/hterm/blob/master/js/hterm_vt_tests.js), and [Google group](https://groups.google.com/a/chromium.org/forum/#!forum/chromium-hterm).
-* xterm: The grandfather of terminal emulators. [Source](http://invisible-island.net/datafiles/release/xterm.tar.gz).
-* Connectbot: Android SSH client. [Source](https://github.com/connectbot/connectbot)
-* Android Terminal Emulator: Android terminal app which Termux terminal handling is based on. Inactive. [Source](https://github.com/jackpal/Android-Terminal-Emulator).
